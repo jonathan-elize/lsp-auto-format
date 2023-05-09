@@ -1,5 +1,6 @@
 local M = {}
 M._BUFFERS_TO_OMIT_FOR_AUTO_FORMAT = {}
+M._PAUSE_AUTO_FORMAT = false
 M._AUGROUP = "LspFormatting"
 
 local notify = function(message, level)
@@ -18,7 +19,7 @@ M.on_attach = function(bufnr)
     group = augroup,
     buffer = bufnr,
     callback = function()
-      if M._BUFFERS_TO_OMIT_FOR_AUTO_FORMAT[bufnr] then
+      if M._PAUSE_AUTO_FORMAT or M._BUFFERS_TO_OMIT_FOR_AUTO_FORMAT[bufnr] then
         -- vim.notify("omitting  auto format before save on bufnr: " .. bufnr)
         return
       end
@@ -32,6 +33,7 @@ M.enable_auto_save = function()
   local bufnr = vim.fn.bufnr()
   -- vim.notify("enabling auto format on save for bufnr: " .. bufnr)
   M._BUFFERS_TO_OMIT_FOR_AUTO_FORMAT[bufnr] = false
+  M._PAUSE_AUTO_FORMAT = false
 end
 
 M.disable_auto_save = function()
@@ -40,9 +42,18 @@ M.disable_auto_save = function()
   M._BUFFERS_TO_OMIT_FOR_AUTO_FORMAT[bufnr] = true
 end
 
+M.pause_auto_save = function()
+  -- vim.notify("pausing auto format for all files.")
+  M._PAUSE_AUTO_FORMAT = true
+end
+
 M.is_auto_save_disabled = function()
   local bufnr = vim.fn.bufnr()
   return M._BUFFERS_TO_OMIT_FOR_AUTO_FORMAT[bufnr]
+end
+
+M.is_auto_save_paused_globally = function()
+  return M._PAUSE_AUTO_FORMAT
 end
 
 M.config = {
